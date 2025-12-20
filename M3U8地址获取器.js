@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         视频流地址获取器
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1001
 // @description  检测并获取网页中的m3u8视频流地址
 // @author       ChangeBUG
 // @match        *://*/*
@@ -23,7 +23,7 @@
             right: 10px;
             background: rgba(28, 28, 28, 0.95);
             color: #ffffff;
-            padding: 15px;
+            //padding: 15px;
             border-radius: 8px;
             z-index: 999999;
             max-width: 350px;
@@ -37,7 +37,7 @@
             font-size: 16px;
             color: #4CAF50;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 8px;
+            //padding-bottom: 8px;
         }
         .m3u8-detector ul {
             list-style: none;
@@ -47,7 +47,7 @@
             overflow-y: auto;
         }
         .m3u8-detector li {
-            margin: 8px 0;
+            //margin: 8px 0;
             word-break: break-all;
             background: rgba(255, 255, 255, 0.05);
             padding: 10px;
@@ -91,7 +91,7 @@
     function createPanel() {
         const panel = document.createElement('div');
         panel.className = 'm3u8-detector';
-        panel.innerHTML = '<h3 style="margin: 0 0 10px 0">视频流地址</h3><ul id="m3u8-list"></ul>';
+        panel.innerHTML = '<ul id="m3u8-list"></ul>';
         document.body.appendChild(panel);
         return panel;
     }
@@ -139,25 +139,46 @@
         }
 
         // 添加URL到面板
-        function addUrl(url) {
+        async function addUrl(url) {
             if (!foundUrls.has(url)) {
                 foundUrls.add(url);
                 const list = document.getElementById('m3u8-list');
                 const li = document.createElement('li');
                 const copyButton = document.createElement('button');
-                copyButton.textContent = '复制地址';
-                copyButton.addEventListener('click', () => {
 
-                    GM_setClipboard(url);
-                    copyToClipboard(url);
+                let title = url.split('/');
+                title = title[title.length - 1];
 
-                    copyButton.textContent = '已复制!';
+//                copyButton.textContent = '复制地址';
+//                 copyButton.addEventListener('click', () => {
+
+//                     GM_setClipboard(url);
+//                     copyToClipboard(url);
+
+//                     copyButton.textContent = '已复制!';
+//                     setTimeout(() => {
+//                         copyButton.textContent = '复制地址';
+//                     }, 1000);
+//                 });
+
+                copyButton.textContent = '发送地址';
+                copyButton.addEventListener('click',async () => {
+
+                    // 发给本地服务 存储到数据库
+                    const response2 = await fetch(`http://192.168.2.250:12345/api/m3u8`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({"m3u8Url": url, "title": title})
+                    })
+                    console.log(response2)
+
+                    copyButton.textContent = '已发送!';
                     setTimeout(() => {
-                        copyButton.textContent = '复制地址';
+                        copyButton.textContent = '发送地址';
                     }, 1000);
                 });
 
-                li.textContent = url;
+                li.textContent = title;
                 li.appendChild(document.createElement('br'));
                 li.appendChild(copyButton);
                 list.appendChild(li);
