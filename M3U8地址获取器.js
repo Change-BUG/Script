@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         视频流地址获取器
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1002
+// @version      1.0.0
 // @description  检测并获取网页中的m3u8视频流地址
 // @author       ChangeBUG
 // @match        *://*/*
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
+// @grant        GM_xmlhttpRequest
 // @updateURL    https://cdn.jsdelivr.net/gh/Change-BUG/ScriptCollection@main/M3U8%E5%9C%B0%E5%9D%80%E8%8E%B7%E5%8F%96%E5%99%A8.js
 // @downloadURL  https://cdn.jsdelivr.net/gh/Change-BUG/ScriptCollection@main/M3U8%E5%9C%B0%E5%9D%80%E8%8E%B7%E5%8F%96%E5%99%A8.js
 // @license      MIT
@@ -149,34 +150,37 @@
                 let title = url.split('/');
                 title = title[title.length - 1];
 
-//                copyButton.textContent = '复制地址';
-//                 copyButton.addEventListener('click', () => {
+                // copyButton.textContent = '复制地址';
+                // copyButton.addEventListener('click', () => {
 
-//                     GM_setClipboard(url);
-//                     copyToClipboard(url);
+                //     GM_setClipboard(url);
+                //     copyToClipboard(url);
 
-//                     copyButton.textContent = '已复制!';
-//                     setTimeout(() => {
-//                         copyButton.textContent = '复制地址';
-//                     }, 1000);
-//                 });
+                //     copyButton.textContent = '已复制!';
+                //     setTimeout(() => {
+                //         copyButton.textContent = '复制地址';
+                //     }, 1000);
+                // });
 
                 copyButton.textContent = '发送地址';
                 copyButton.addEventListener('click',async () => {
 
-                    // 发给本地服务 存储到数据库
-                    const response2 = await fetch(`http://192.168.2.250:12345/api/v1/m3u8`, {
-                        method: 'POST',
+                    GM_xmlhttpRequest({
+                        method: "POST",
+                        url: "http://192.168.2.250:12345/api/v1/m3u8",
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({"m3u8Url": url, "title": title})
-                    })
-                    console.log(response2)
+                        data: JSON.stringify({"m3u8Url": url, "title": title}),
+                        onload: function(response) {
+                            console.log(response);
+                            copyButton.textContent = '已发送 '+ response.status;
+                        },
+                        onerror: function(error) {
+                            copyButton.textContent = "发生错误 " + error
+                        }
+                    });
 
-                    copyButton.textContent = '已发送!';
-                    setTimeout(() => {
-                        copyButton.textContent = '发送地址';
-                    }, 1000);
                 });
+
 
                 li.textContent = title;
                 li.appendChild(document.createElement('br'));
